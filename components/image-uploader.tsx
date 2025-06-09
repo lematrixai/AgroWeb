@@ -3,18 +3,36 @@
 import { useState, useCallback } from "react"
 import { useDropzone } from "react-dropzone"
 import { motion } from "framer-motion"
-import { Upload, Image as ImageIcon, X } from "lucide-react"
+import { Upload, Image as ImageIcon, X, Loader2, MessageSquare } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { detectDisease } from "@/lib/action/action.detect"
+import { useRouter } from "next/navigation"
+
+interface PredictionResult {
+  predictions: Array<{
+    label: string;
+    score: number;
+  }>;
+  topPrediction: {
+    label: string;
+    confidence: string;
+  };
+  message: string;
+}
 
 export default function ImageUploader() {
   const [file, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [prediction, setPrediction] = useState<PredictionResult | null>(null)
+  const router = useRouter()
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const selectedFile = acceptedFiles[0]
     if (selectedFile) {
       setFile(selectedFile)
+      setPrediction(null) // Reset prediction when new file is selected
       const reader = new FileReader()
       reader.onloadend = () => {
         setPreview(reader.result as string)
@@ -34,13 +52,33 @@ export default function ImageUploader() {
   const handleRemove = () => {
     setFile(null)
     setPreview(null)
+    setPrediction(null)
   }
 
   const handleUpload = async () => {
-    if (!file) return
+    try {
+      if (!file) return
+      setLoading(true)
+      const result = await detectDisease(file)
+      console.log("Result:", result)
+      setPrediction(result)
+    } catch (error) {
+      console.error("Error uploading file:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
-    // In a real application, you would upload the file to your server here
-    console.log("Uploading file:", file)
+  const handleChat = () => {
+    if (!prediction) return;
+    
+    const searchParams = new URLSearchParams({
+      message: prediction.message,
+      disease: prediction.topPrediction.label,
+      confidence: prediction.topPrediction.confidence
+    });
+    
+    router.push(`/chat?${searchParams.toString()}`);
   }
 
   return (
@@ -103,10 +141,12 @@ export default function ImageUploader() {
         >
           <Button
             onClick={handleUpload}
+            disabled={loading}
             className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl"
           >
-            <ImageIcon className="h-4 w-4 mr-2" />
-            Upload Image
+            {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : 
+            <ImageIcon className="h-4 w-4 mr-2" />}
+            {loading ? "Analyzing..." : "Analyze Image"}
           </Button>
         </motion.div>
       )}
