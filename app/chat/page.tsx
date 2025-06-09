@@ -8,32 +8,27 @@ import LoadingSkeleton from "@/components/loading-skeleton"
 import { TypewriterEffect } from "@/components/ui/typewriter-effect"
 import { TracingBeam } from "@/components/ui/tracing-beam"
 
-type Props = {
-  searchParams: { [key: string]: string | string[] | undefined }
-  params: { [key: string]: string }
+type PageProps = {
+  params: Promise<{ [key: string]: string }>
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
-export default function ChatPage({ searchParams }: Props) {
-  const resultId = searchParams.resultId as string | undefined
+export default async function ChatPage({ searchParams }: PageProps) {
+  const params = await searchParams
+  const resultId = Array.isArray(params?.resultId) 
+    ? params.resultId[0] 
+    : params?.resultId || undefined
 
   const words = [
-    {
-      text: "AI",
-      className: "text-blue-500 dark:text-blue-500",
-    },
-    {
-      text: "Agricultural",
-      className: "text-blue-500 dark:text-blue-500",
-    },
-    {
-      text: "Assistant",
-      className: "text-blue-500 dark:text-blue-500",
-    },
+    { text: "AI", className: "text-blue-500 dark:text-blue-500" },
+    { text: "Agricultural", className: "text-blue-500 dark:text-blue-500" },
+    { text: "Assistant", className: "text-blue-500 dark:text-blue-500" },
   ]
 
   return (
     <div className="min-h-screen bg-black/[0.96] antialiased">
       <BackgroundBeams />
+
       <div className="container max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 relative z-10">
         <Link
           href={resultId ? `/results?id=${resultId}` : "/"}

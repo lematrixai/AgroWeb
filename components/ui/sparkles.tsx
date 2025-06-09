@@ -40,7 +40,7 @@ export const SparklesCore = ({
       <Particles
         id={id}
         className={className}
-        loaded={particlesLoaded}
+        particlesLoaded={particlesLoaded}
         options={{
           background: {
             color: {
@@ -62,11 +62,10 @@ export const SparklesCore = ({
               straight: false,
             },
             number: {
+              value: particleDensity,
               density: {
                 enable: true,
-                area: particleDensity,
               },
-              value: 80,
             },
             opacity: {
               value: 0.5,
