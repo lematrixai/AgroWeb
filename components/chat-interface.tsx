@@ -167,8 +167,8 @@ export default function ChatInterface({ resultId }: { resultId?: string }) {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
               className={cn(
-                "flex items-start gap-3 max-w-[85%]",
-                message.role === "user" ? "ml-auto" : ""
+                "flex items-start gap-3",
+                message.role === "user" ? "ml-auto flex-row-reverse" : "mr-auto"
               )}
             >
               {message.role === "assistant" && (
@@ -184,7 +184,7 @@ export default function ChatInterface({ resultId }: { resultId?: string }) {
                 initial={{ scale: 0.95 }}
                 animate={{ scale: 1 }}
                 className={cn(
-                  "rounded-2xl p-4 shadow-lg backdrop-blur-sm",
+                  "rounded-2xl p-4 shadow-lg backdrop-blur-sm max-w-[85%]",
                   message.role === "user"
                     ? "bg-blue-500 text-white"
                     : "bg-white/10 border border-blue-500/20 text-white"

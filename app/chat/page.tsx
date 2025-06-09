@@ -43,8 +43,8 @@ export default async function ChatPage({ searchParams }: PageProps) {
           <TypewriterEffect words={words} className="text-2xl sm:text-3xl font-bold" />
         </div>
 
-        <TracingBeam className="px-4 sm:px-6">
-          <Card className="min-h-[500px] sm:min-h-[600px] border border-gray-800 bg-black/40 backdrop-blur-xl shadow-2xl">
+        <TracingBeam className="px-0 sm:px-6">
+          <Card className="min-h-[500px] sm:min-h-[600px] border border-gray-800 bg-black/40 backdrop-blur-xl shadow-2xl p-0 sm:p-6">
             <Suspense fallback={<LoadingSkeleton />}>
               <ChatInterface resultId={resultId} />
             </Suspense>
