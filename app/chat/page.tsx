@@ -1,35 +1,60 @@
 import { Suspense } from "react"
 import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
-
+import { ArrowLeft, Sparkles } from "lucide-react"
+import { BackgroundBeams } from "@/components/ui/background-beams"
 import { Card } from "@/components/ui/card"
 import ChatInterface from "@/components/chat-interface"
 import LoadingSkeleton from "@/components/loading-skeleton"
+import { TypewriterEffect } from "@/components/ui/typewriter-effect"
+import { TracingBeam } from "@/components/ui/tracing-beam"
 
-export default function ChatPage({
-  searchParams,
-}: {
-  searchParams: { resultId?: string }
-}) {
-  const resultId = searchParams.resultId
+type Props = {
+  searchParams: { [key: string]: string | string[] | undefined }
+}
+
+export default function ChatPage({ searchParams }: Props) {
+  const resultId = searchParams.resultId as string | undefined
+
+  const words = [
+    {
+      text: "AI",
+      className: "text-blue-500 dark:text-blue-500",
+    },
+    {
+      text: "Agricultural",
+      className: "text-blue-500 dark:text-blue-500",
+    },
+    {
+      text: "Assistant",
+      className: "text-blue-500 dark:text-blue-500",
+    },
+  ]
 
   return (
-    <div className="container max-w-4xl py-12">
-      <Link
-        href={resultId ? `/results?id=${resultId}` : "/"}
-        className="flex items-center text-sm text-gray-500 hover:text-gray-900 mb-8"
-      >
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Back to {resultId ? "Results" : "Home"}
-      </Link>
+    <div className="min-h-screen bg-black/[0.96] antialiased">
+      <BackgroundBeams />
+      <div className="container max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 relative z-10">
+        <Link
+          href={resultId ? `/results?id=${resultId}` : "/"}
+          className="inline-flex items-center text-sm text-gray-400 hover:text-white transition-colors mb-8 group"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform" />
+          Back to {resultId ? "Results" : "Home"}
+        </Link>
 
-      <h1 className="text-3xl font-bold mb-6">AI Assistant</h1>
+        <div className="flex items-center gap-3 mb-8">
+          <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-blue-500 animate-pulse" />
+          <TypewriterEffect words={words} className="text-2xl sm:text-3xl font-bold" />
+        </div>
 
-      <Card className="min-h-[500px]">
-        <Suspense fallback={<LoadingSkeleton />}>
-          <ChatInterface resultId={resultId} />
-        </Suspense>
-      </Card>
+        <TracingBeam className="px-4 sm:px-6">
+          <Card className="min-h-[500px] sm:min-h-[600px] border border-gray-800 bg-black/40 backdrop-blur-xl shadow-2xl">
+            <Suspense fallback={<LoadingSkeleton />}>
+              <ChatInterface resultId={resultId} />
+            </Suspense>
+          </Card>
+        </TracingBeam>
+      </div>
     </div>
   )
 }

@@ -3,7 +3,8 @@
 import type React from "react"
 
 import { useState, useRef, useEffect } from "react"
-import { Send, Loader2 } from "lucide-react"
+import { Send, Loader2, Bot, User, Sparkles } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
 
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -155,55 +156,83 @@ export default function ChatInterface({ resultId }: { resultId?: string }) {
   }
 
   return (
-    <div className="flex flex-col h-[600px]">
+    <div className="flex flex-col h-[600px] bg-black/40">
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={cn("flex items-start gap-3 max-w-[80%]", message.role === "user" ? "ml-auto" : "")}
-          >
-            {message.role === "assistant" && (
-              <Avatar>
-                <AvatarImage src="/placeholder.svg?height=40&width=40" alt="AI" />
-                <AvatarFallback>AI</AvatarFallback>
-              </Avatar>
-            )}
-
-            <div
+        <AnimatePresence>
+          {messages.map((message) => (
+            <motion.div
+              key={message.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
               className={cn(
-                "rounded-lg p-3",
-                message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted",
+                "flex items-start gap-3 max-w-[85%]",
+                message.role === "user" ? "ml-auto" : ""
               )}
             >
-              <p className="whitespace-pre-line">{message.content}</p>
-              <div className="text-xs opacity-50 mt-1">{message.timestamp.toLocaleTimeString()}</div>
-            </div>
+              {message.role === "assistant" && (
+                <Avatar className="h-8 w-8 border-2 border-blue-500/20">
+                  <AvatarImage src="/bot-avatar.png" alt="AI" />
+                  <AvatarFallback className="bg-blue-500/10">
+                    <Bot className="h-4 w-4 text-blue-500" />
+                  </AvatarFallback>
+                </Avatar>
+              )}
 
-            {message.role === "user" && (
-              <Avatar>
-                <AvatarImage src="/placeholder.svg?height=40&width=40" alt="User" />
-                <AvatarFallback>You</AvatarFallback>
-              </Avatar>
-            )}
-          </div>
-        ))}
+              <motion.div
+                initial={{ scale: 0.95 }}
+                animate={{ scale: 1 }}
+                className={cn(
+                  "rounded-2xl p-4 shadow-lg backdrop-blur-sm",
+                  message.role === "user"
+                    ? "bg-blue-500 text-white"
+                    : "bg-white/10 border border-blue-500/20 text-white"
+                )}
+              >
+                <p className="whitespace-pre-line text-sm leading-relaxed">{message.content}</p>
+                <div className="text-xs opacity-50 mt-2">
+                  {message.timestamp.toLocaleTimeString()}
+                </div>
+              </motion.div>
+
+              {message.role === "user" && (
+                <Avatar className="h-8 w-8 border-2 border-blue-500/20">
+                  <AvatarImage src="/user-avatar.png" alt="User" />
+                  <AvatarFallback className="bg-blue-500/10">
+                    <User className="h-4 w-4 text-blue-500" />
+                  </AvatarFallback>
+                </Avatar>
+              )}
+            </motion.div>
+          ))}
+        </AnimatePresence>
 
         {isLoading && (
-          <div className="flex items-center gap-3">
-            <Avatar>
-              <AvatarImage src="/placeholder.svg?height=40&width=40" alt="AI" />
-              <AvatarFallback>AI</AvatarFallback>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center gap-3"
+          >
+            <Avatar className="h-8 w-8 border-2 border-blue-500/20">
+              <AvatarImage src="/bot-avatar.png" alt="AI" />
+              <AvatarFallback className="bg-blue-500/10">
+                <Bot className="h-4 w-4 text-blue-500" />
+              </AvatarFallback>
             </Avatar>
-            <div className="bg-muted rounded-lg p-3">
-              <Loader2 className="h-4 w-4 animate-spin" />
+            <div className="bg-white/10 rounded-2xl p-4 border border-blue-500/20">
+              <div className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+                <Sparkles className="h-4 w-4 text-blue-500 animate-pulse" />
+              </div>
             </div>
-          </div>
+          </motion.div>
         )}
 
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="border-t p-4">
+      <div className="border-t border-blue-500/20 p-4 bg-black/40 backdrop-blur-sm">
         <form
           onSubmit={(e) => {
             e.preventDefault()
@@ -215,11 +244,16 @@ export default function ChatInterface({ resultId }: { resultId?: string }) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Type your message..."
-            className="min-h-[50px] resize-none"
+            placeholder="Ask me anything about agriculture..."
+            className="min-h-[50px] resize-none rounded-xl border-blue-500/20 bg-white/5 text-white placeholder:text-gray-400 focus:border-blue-500 focus:ring-blue-500/20"
             disabled={isLoading}
           />
-          <Button type="submit" size="icon" disabled={isLoading || !input.trim()}>
+          <Button
+            type="submit"
+            size="icon"
+            disabled={isLoading || !input.trim()}
+            className="rounded-xl bg-blue-500 hover:bg-blue-600 text-white"
+          >
             <Send className="h-4 w-4" />
           </Button>
         </form>

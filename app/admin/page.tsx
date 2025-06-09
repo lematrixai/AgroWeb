@@ -1,191 +1,214 @@
+"use client"
+
 import { Suspense } from "react"
+import Link from "next/link"
+import { ArrowLeft, Sparkles, Users, Settings, Database } from "lucide-react"
+import { BackgroundBeams } from "@/components/ui/background-beams"
+import { Card } from "@/components/ui/card"
+import { TypewriterEffect } from "@/components/ui/typewriter-effect"
+import { TracingBeam } from "@/components/ui/tracing-beam"
+import { motion } from "framer-motion"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import AdminDashboard from "@/components/admin-dashboard"
-import AdminAuth from "@/components/admin-auth"
-import LoadingSkeleton from "@/components/loading-skeleton"
-import { checkAdminAuth } from "@/lib/auth"
+const words = [
+  {
+    text: "Admin",
+    className: "text-blue-500 dark:text-blue-500",
+  },
+  {
+    text: "Dashboard",
+    className: "text-blue-500 dark:text-blue-500",
+  },
+]
 
-export default async function AdminPage() {
-  // In a real app, you would check if the user is authenticated
-  const isAuthenticated = await checkAdminAuth()
-
-  if (!isAuthenticated) {
-    // Show login form instead of redirecting for demo purposes
-    return <AdminAuth />
-  }
-
+export default function AdminPage() {
   return (
-    <div className="container py-10">
-      <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
+    <div className="min-h-screen bg-black/[0.96] antialiased">
+      <BackgroundBeams />
+      <div className="container max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 relative z-10">
+        <Link
+          href="/"
+          className="inline-flex items-center text-sm text-gray-400 hover:text-white transition-colors mb-8 group"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform" />
+          Back to Home
+        </Link>
 
-      <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          <TabsTrigger value="reports">Reports</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
-        </TabsList>
+        <div className="flex items-center gap-3 mb-8">
+          <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-blue-500 animate-pulse" />
+          <TypewriterEffect words={words} className="text-2xl sm:text-3xl font-bold" />
+        </div>
 
-        <TabsContent value="overview" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Submissions</CardTitle>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  className="h-4 w-4 text-muted-foreground"
+        {/* Main Content Section */}
+        <div className="space-y-8 mb-16">
+          {/* Stats Overview */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <TracingBeam className="px-4 sm:px-6">
+              <Card className="p-4 sm:p-6 border border-gray-800 bg-black/40 backdrop-blur-xl shadow-2xl">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="space-y-4"
                 >
-                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                </svg>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">2,345</div>
-                <p className="text-xs text-muted-foreground">+20.1% from last month</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Healthy Plants</CardTitle>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  className="h-4 w-4 text-muted-foreground"
-                >
-                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                  <circle cx="9" cy="7" r="4" />
-                  <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
-                </svg>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">1,274</div>
-                <p className="text-xs text-muted-foreground">+10.5% from last month</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">MSV Cases</CardTitle>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  className="h-4 w-4 text-muted-foreground"
-                >
-                  <rect width="20" height="14" x="2" y="5" rx="2" />
-                  <path d="M2 10h20" />
-                </svg>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">684</div>
-                <p className="text-xs text-muted-foreground">+19% from last month</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">MLN Cases</CardTitle>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  className="h-4 w-4 text-muted-foreground"
-                >
-                  <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-                </svg>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">387</div>
-                <p className="text-xs text-muted-foreground">+7% from last month</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-            <Card className="col-span-4">
-              <CardHeader>
-                <CardTitle>Disease Trends</CardTitle>
-              </CardHeader>
-              <CardContent className="pl-2">
-                <Suspense fallback={<LoadingSkeleton />}>
-                  <AdminDashboard />
-                </Suspense>
-              </CardContent>
-            </Card>
-
-            <Card className="col-span-3">
-              <CardHeader>
-                <CardTitle>Disease Distribution</CardTitle>
-                <CardDescription>Distribution of detected diseases by region</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Suspense fallback={<LoadingSkeleton />}>
-                  <div className="h-[300px] flex items-center justify-center">
-                    <p className="text-sm text-muted-foreground">Map visualization will be displayed here</p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center">
+                      <Users className="h-6 w-6 text-blue-500" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg sm:text-xl font-semibold text-white">Total Users</h3>
+                      <p className="text-2xl sm:text-3xl font-bold text-blue-500">1,234</p>
+                    </div>
                   </div>
-                </Suspense>
-              </CardContent>
-            </Card>
+                </motion.div>
+              </Card>
+            </TracingBeam>
+
+            <TracingBeam className="px-4 sm:px-6">
+              <Card className="p-4 sm:p-6 border border-gray-800 bg-black/40 backdrop-blur-xl shadow-2xl">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="space-y-4"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center">
+                      <Database className="h-6 w-6 text-blue-500" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg sm:text-xl font-semibold text-white">Total Scans</h3>
+                      <p className="text-2xl sm:text-3xl font-bold text-blue-500">5,678</p>
+                    </div>
+                  </div>
+                </motion.div>
+              </Card>
+            </TracingBeam>
+
+            <TracingBeam className="px-4 sm:px-6">
+              <Card className="p-4 sm:p-6 border border-gray-800 bg-black/40 backdrop-blur-xl shadow-2xl">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="space-y-4"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center">
+                      <Settings className="h-6 w-6 text-blue-500" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg sm:text-xl font-semibold text-white">System Status</h3>
+                      <p className="text-2xl sm:text-3xl font-bold text-green-500">Active</p>
+                    </div>
+                  </div>
+                </motion.div>
+              </Card>
+            </TracingBeam>
           </div>
-        </TabsContent>
 
-        <TabsContent value="analytics" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Advanced Analytics</CardTitle>
-              <CardDescription>Detailed analysis of disease patterns and trends</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">Advanced analytics content will be displayed here</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
+          {/* Admin Actions */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+            <TracingBeam className="px-4 sm:px-6">
+              <Card className="p-4 sm:p-6 border border-gray-800 bg-black/40 backdrop-blur-xl shadow-2xl">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6 }}
+                  className="space-y-6"
+                >
+                  <h2 className="text-xl sm:text-2xl font-semibold text-white">User Management</h2>
+                  <p className="text-sm sm:text-base text-gray-400">
+                    Manage user accounts, permissions, and access levels.
+                  </p>
+                  <Link
+                    href="/admin/users"
+                    className="inline-flex items-center justify-center w-full sm:w-auto px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl transition-colors"
+                  >
+                    <Users className="h-4 w-4 mr-2" />
+                    Manage Users
+                  </Link>
+                </motion.div>
+              </Card>
+            </TracingBeam>
 
-        <TabsContent value="reports" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Reports</CardTitle>
-              <CardDescription>Generate and download reports</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">Reports content will be displayed here</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
+            <TracingBeam className="px-4 sm:px-6">
+              <Card className="p-4 sm:p-6 border border-gray-800 bg-black/40 backdrop-blur-xl shadow-2xl">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.8 }}
+                  className="space-y-6"
+                >
+                  <h2 className="text-xl sm:text-2xl font-semibold text-white">System Settings</h2>
+                  <p className="text-sm sm:text-base text-gray-400">
+                    Configure system parameters and manage application settings.
+                  </p>
+                  <Link
+                    href="/admin/settings"
+                    className="inline-flex items-center justify-center w-full sm:w-auto px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl transition-colors"
+                  >
+                    <Settings className="h-4 w-4 mr-2" />
+                    System Settings
+                  </Link>
+                </motion.div>
+              </Card>
+            </TracingBeam>
+          </div>
+        </div>
 
-        <TabsContent value="settings" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Settings</CardTitle>
-              <CardDescription>Manage your dashboard preferences</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">Settings content will be displayed here</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+        {/* Recent Activity Section */}
+        <div className="mt-16 border-t border-gray-800 pt-16">
+          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-8 text-center">Recent Activity</h2>
+          <div className="grid grid-cols-1 gap-6">
+            <TracingBeam className="px-4 sm:px-6">
+              <Card className="p-4 sm:p-6 border border-gray-800 bg-black/40 backdrop-blur-xl shadow-2xl">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1 }}
+                  className="space-y-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
+                        <Users className="h-5 w-5 text-blue-500" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-white">New User Registration</h3>
+                        <p className="text-sm text-gray-400">John Doe registered a new account</p>
+                      </div>
+                    </div>
+                    <span className="text-sm text-gray-400">2 minutes ago</span>
+                  </div>
+                </motion.div>
+              </Card>
+            </TracingBeam>
+
+            <TracingBeam className="px-4 sm:px-6">
+              <Card className="p-4 sm:p-6 border border-gray-800 bg-black/40 backdrop-blur-xl shadow-2xl">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.2 }}
+                  className="space-y-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
+                        <Database className="h-5 w-5 text-blue-500" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-white">New Scan Completed</h3>
+                        <p className="text-sm text-gray-400">Plant disease detection completed</p>
+                      </div>
+                    </div>
+                    <span className="text-sm text-gray-400">5 minutes ago</span>
+                  </div>
+                </motion.div>
+              </Card>
+            </TracingBeam>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
