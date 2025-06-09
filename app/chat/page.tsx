@@ -10,6 +10,7 @@ import { TracingBeam } from "@/components/ui/tracing-beam"
 
 type Props = {
   searchParams: { [key: string]: string | string[] | undefined }
+  params: { [key: string]: string }
 }
 
 export default function ChatPage({ searchParams }: Props) {
