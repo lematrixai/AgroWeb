@@ -5,12 +5,15 @@ import type React from "react"
 import { useState, useRef, useEffect } from "react"
 import { Send, Loader2, Bot, User, Sparkles } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
+import { useSearchParams } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getDetectionResult } from "@/lib/results"
+import { chatWithAI } from "@/lib/action/action.chat"
 import { cn } from "@/lib/utils"
+import { FormattedText } from "./formatted-text"
 
 type Message = {
   id: string
@@ -23,50 +26,144 @@ export default function ChatInterface({ resultId }: { resultId?: string }) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const searchParams = useSearchParams()
 
-  // Load initial message based on detection result
+  // Load initial message based on detection result or URL parameters
   useEffect(() => {
     const loadInitialMessage = async () => {
-      if (resultId) {
+      const disease = searchParams.get('disease')
+      const confidence = searchParams.get('confidence')
+      const initialMessage = searchParams.get('message')
+
+      if (disease && confidence && initialMessage) {
+        // Handle prediction-based chat
+        let message = ""
+        if (disease.toLowerCase() === "healthy") {
+          message = `🌱 Good news! Your maize plant appears healthy (${confidence}% confidence).
+
+🔍 What This Means
+• Your plant is showing no signs of disease
+• The leaves and overall structure appear normal
+
+💡 Recommendations
+• Continue regular monitoring
+• Maintain proper watering and fertilization
+• Watch for any changes in plant appearance
+
+Would you like specific tips for maintaining healthy maize plants?`
+        } else if (disease.toLowerCase() === "msv") {
+          message = `🔍 I've analyzed your maize plant and detected Maize Streak Virus (MSV) with ${confidence}% confidence.
+
+⚠️ What This Means
+• MSV is a viral disease that affects maize plants
+• It can cause yellow streaks on leaves
+• May lead to stunted growth and reduced yield
+
+💊 Recommended Actions
+• Remove and destroy infected plants
+• Control vector populations (leafhoppers)
+• Use resistant varieties for future planting
+
+Would you like detailed information about any of these aspects?`
+        } else if (disease.toLowerCase() === "mln") {
+          message = `⚠️ Urgent: Your maize has been diagnosed with Maize Lethal Necrosis (MLN) with ${confidence}% confidence.
+
+🔍 What This Means
+• MLN is a serious viral disease
+• Can cause complete crop loss
+• Requires immediate attention
+
+💊 Immediate Actions Needed
+• Isolate affected plants
+• Remove and destroy infected plants
+• Implement strict field sanitation
+
+Would you like specific guidance on managing this situation?`
+        }
+
+        setMessages([
+          {
+            id: crypto.randomUUID(),
+            role: "assistant",
+            content: message,
+            timestamp: new Date(),
+          },
+        ])
+      } else if (resultId) {
+        // Handle result ID based chat
         setIsLoading(true)
+        setError(null)
         try {
           const result = await getDetectionResult(resultId)
           if (result) {
-            let initialMessage = "Hello! I'm your agricultural assistant. How can I help you today?"
-
+            let message = ""
             if (result.status === "healthy") {
-              initialMessage =
-                "Good news! Your maize plant appears healthy. How can I help you maintain your crop health?"
+              message = `🌱 Good news! Your maize plant appears healthy.
+
+🔍 What This Means
+• Your plant is showing no signs of disease
+• The leaves and overall structure appear normal
+
+💡 Recommendations
+• Continue regular monitoring
+• Maintain proper watering and fertilization
+• Watch for any changes in plant appearance
+
+Would you like specific tips for maintaining healthy maize plants?`
             } else if (result.status === "msv") {
-              initialMessage =
-                "I see your maize has been diagnosed with Maize Streak Virus (MSV). I can provide information about treatment and prevention. What would you like to know?"
+              message = `🔍 I've analyzed your maize plant and detected Maize Streak Virus (MSV).
+
+⚠️ What This Means
+• MSV is a viral disease that affects maize plants
+• It can cause yellow streaks on leaves
+• May lead to stunted growth and reduced yield
+
+💊 Recommended Actions
+• Remove and destroy infected plants
+• Control vector populations (leafhoppers)
+• Use resistant varieties for future planting
+
+Would you like detailed information about any of these aspects?`
             } else if (result.status === "mln") {
-              initialMessage =
-                "Your maize has been diagnosed with Maize Lethal Necrosis (MLN), which requires immediate attention. I can help with management strategies. What specific information do you need?"
+              message = `⚠️ Urgent: Your maize has been diagnosed with Maize Lethal Necrosis (MLN).
+
+🔍 What This Means
+• MLN is a serious viral disease
+• Can cause complete crop loss
+• Requires immediate attention
+
+💊 Immediate Actions Needed
+• Isolate affected plants
+• Remove and destroy infected plants
+• Implement strict field sanitation
+
+Would you like specific guidance on managing this situation?`
             }
 
             setMessages([
               {
                 id: crypto.randomUUID(),
                 role: "assistant",
-                content: initialMessage,
+                content: message,
                 timestamp: new Date(),
               },
             ])
           }
         } catch (error) {
           console.error("Error loading detection result:", error)
+          setError("Failed to load initial message. Please try refreshing the page.")
         } finally {
           setIsLoading(false)
         }
       } else {
-        // Default welcome message
+        // Default welcome message for new chat
         setMessages([
           {
             id: crypto.randomUUID(),
             role: "assistant",
-            content: "Hello! I'm your agricultural assistant. How can I help you today?",
+            content: "👋 Hi! I'm your maize disease assistant. I can help you with:\n• Maize Streak Virus (MSV)\n• Maize Lethal Necrosis (MLN)\n• General maize health issues\n\nWhat would you like to know about your maize plants?",
             timestamp: new Date(),
           },
         ])
@@ -74,7 +171,7 @@ export default function ChatInterface({ resultId }: { resultId?: string }) {
     }
 
     loadInitialMessage()
-  }, [resultId])
+  }, [resultId, searchParams])
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -94,55 +191,45 @@ export default function ChatInterface({ resultId }: { resultId?: string }) {
     setMessages((prev) => [...prev, userMessage])
     setInput("")
     setIsLoading(true)
+    setError(null)
 
     try {
-      // In a real application, you would send the message to an API endpoint
-      // that would process it with an AI model like GPT-4 or Claude
+      const result = await getDetectionResult(resultId || "")
+      
+      // Use try-catch for the Server Action
+      try {
+        const response = await chatWithAI(
+          [...messages, userMessage],
+          result?.status || null,
+          result?.confidence?.toString() || null
+        )
 
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+        const assistantMessage: Message = {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          content: response.content,
+          timestamp: new Date(),
+        }
 
-      // Mock responses based on user input
-      let responseContent = ""
-      const userInput = input.toLowerCase()
+        setMessages((prev) => [...prev, assistantMessage])
+      } catch (actionError: any) {
+        // Handle Server Action error
+        console.error("Server Action Error:", actionError)
+        
+        // Add error message to chat
+        const errorMessage: Message = {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          content: actionError.message,
+          timestamp: new Date(),
+        }
 
-      if (userInput.includes("treatment") && userInput.includes("msv")) {
-        responseContent =
-          "For Maize Streak Virus (MSV) treatment:\n\n1. Remove and destroy infected plants to prevent spread\n2. Control leafhopper populations with appropriate insecticides\n3. Plant MSV-resistant varieties in future seasons\n4. Maintain weed-free fields to reduce leafhopper habitat\n5. Consider crop rotation with non-host crops"
-      } else if (userInput.includes("treatment") && userInput.includes("mln")) {
-        responseContent =
-          "For Maize Lethal Necrosis (MLN) treatment:\n\n1. Unfortunately, there is no cure for infected plants\n2. Remove and destroy all infected plants immediately\n3. Implement strict field sanitation measures\n4. Control insect vectors with appropriate insecticides\n5. Practice crop rotation with non-cereal crops for at least 2 seasons\n6. Use certified disease-free seeds for future planting"
-      } else if (userInput.includes("prevent") || userInput.includes("prevention")) {
-        responseContent =
-          "To prevent maize diseases:\n\n1. Use certified disease-free seeds\n2. Practice crop rotation\n3. Maintain proper field sanitation\n4. Control insect vectors\n5. Plant disease-resistant varieties when available\n6. Ensure proper spacing between plants for good air circulation\n7. Monitor your crops regularly for early detection"
-      } else if (userInput.includes("fertilizer") || userInput.includes("nutrient")) {
-        responseContent =
-          "For maize fertilization:\n\n1. Conduct soil testing to determine nutrient needs\n2. Apply base fertilizer before planting (NPK)\n3. Top-dress with nitrogen when plants are knee-high\n4. Consider micronutrients like zinc and boron if deficient\n5. Organic options include well-decomposed manure and compost\n6. Follow local agricultural extension recommendations for your specific region"
-      } else {
-        responseContent =
-          "Thank you for your question. As an agricultural assistant, I can help with information about maize diseases, prevention, treatment options, and general farming practices. Could you provide more specific details about what you'd like to know?"
+        setMessages((prev) => [...prev, errorMessage])
+        setError(actionError.message)
       }
-
-      const assistantMessage: Message = {
-        id: crypto.randomUUID(),
-        role: "assistant",
-        content: responseContent,
-        timestamp: new Date(),
-      }
-
-      setMessages((prev) => [...prev, assistantMessage])
-    } catch (error) {
-      console.error("Error sending message:", error)
-
-      // Add error message
-      const errorMessage: Message = {
-        id: crypto.randomUUID(),
-        role: "assistant",
-        content: "Sorry, I encountered an error processing your request. Please try again.",
-        timestamp: new Date(),
-      }
-
-      setMessages((prev) => [...prev, errorMessage])
+    } catch (error: any) {
+      console.error("Error getting detection result:", error)
+      setError("Failed to get detection result. Please try again.")
     } finally {
       setIsLoading(false)
     }
@@ -157,6 +244,11 @@ export default function ChatInterface({ resultId }: { resultId?: string }) {
 
   return (
     <div className="flex flex-col h-[600px] bg-black/40">
+      {error && (
+        <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+          {error}
+        </div>
+      )}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         <AnimatePresence>
           {messages.map((message) => (
@@ -173,7 +265,7 @@ export default function ChatInterface({ resultId }: { resultId?: string }) {
             >
               {message.role === "assistant" && (
                 <Avatar className="h-8 w-8 border-2 border-blue-500/20">
-                  <AvatarImage src="/bot-avatar.png" alt="AI" />
+                  <AvatarImage src="/bot-avatar.svg" alt="AI" />
                   <AvatarFallback className="bg-blue-500/10">
                     <Bot className="h-4 w-4 text-blue-500" />
                   </AvatarFallback>
@@ -190,7 +282,9 @@ export default function ChatInterface({ resultId }: { resultId?: string }) {
                     : "bg-white/10 border border-blue-500/20 text-white"
                 )}
               >
-                <p className="whitespace-pre-line text-sm leading-relaxed">{message.content}</p>
+                <div className="flex-1 space-y-2 overflow-hidden px-1">
+                  <FormattedText content={message.content} />
+                </div>
                 <div className="text-xs opacity-50 mt-2">
                   {message.timestamp.toLocaleTimeString()}
                 </div>
@@ -198,7 +292,7 @@ export default function ChatInterface({ resultId }: { resultId?: string }) {
 
               {message.role === "user" && (
                 <Avatar className="h-8 w-8 border-2 border-blue-500/20">
-                  <AvatarImage src="/user-avatar.png" alt="User" />
+                  <AvatarImage src="/user-avatar.svg" alt="User" />
                   <AvatarFallback className="bg-blue-500/10">
                     <User className="h-4 w-4 text-blue-500" />
                   </AvatarFallback>
@@ -215,7 +309,7 @@ export default function ChatInterface({ resultId }: { resultId?: string }) {
             className="flex items-center gap-3"
           >
             <Avatar className="h-8 w-8 border-2 border-blue-500/20">
-              <AvatarImage src="/bot-avatar.png" alt="AI" />
+              <AvatarImage src="/bot-avatar.svg" alt="AI" />
               <AvatarFallback className="bg-blue-500/10">
                 <Bot className="h-4 w-4 text-blue-500" />
               </AvatarFallback>
