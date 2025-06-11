@@ -1,133 +1,94 @@
-import { CheckCircle, AlertTriangle, AlertCircle } from "lucide-react"
+"use client"
 
-import { Card, CardContent } from "@/components/ui/card"
-import { getDetectionResult } from "@/lib/results"
+import { motion } from "framer-motion"
+import { CheckCircle2, AlertTriangle, XCircle, Leaf } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { useRouter } from "next/navigation"
 
-export default async function ResultDisplay({ id }: { id: string }) {
-  const result = await getDetectionResult(id)
+type DiseaseStatus = 'healthy' | 'msv' | 'mln'
 
-  if (!result) {
-    return (
-      <div className="p-6 text-center">
-        <p className="text-red-500">Result not found. Please try again.</p>
-      </div>
-    )
+interface ResultDisplayProps {
+  result: {
+    status: DiseaseStatus
+    confidence: string
+    message: string
   }
+}
 
-  const statusConfig = {
-    healthy: {
-      title: "Healthy",
-      description: "Your maize plant appears to be healthy with no signs of disease.",
-      icon: CheckCircle,
-      color: "text-green-500",
-      bgColor: "bg-green-50",
-      borderColor: "border-green-200",
-      image: "/placeholder.svg?height=300&width=400",
-    },
-    msv: {
-      title: "Maize Streak Virus (MSV)",
-      description: "Your plant shows symptoms of Maize Streak Virus, characterized by narrow white streaks on leaves.",
-      icon: AlertTriangle,
-      color: "text-yellow-500",
-      bgColor: "bg-yellow-50",
-      borderColor: "border-yellow-200",
-      image: "/placeholder.svg?height=300&width=400",
-    },
-    mln: {
-      title: "Maize Lethal Necrosis (MLN)",
-      description:
-        "Your plant shows symptoms of Maize Lethal Necrosis, a severe disease that can cause complete crop failure.",
-      icon: AlertCircle,
-      color: "text-red-500",
-      bgColor: "bg-red-50",
-      borderColor: "border-red-200",
-      image: "/placeholder.svg?height=300&width=400",
-    },
+const statusConfig = {
+  healthy: {
+    title: "Healthy Plant",
+    description: "Your corn plant appears to be healthy and thriving.",
+    icon: CheckCircle2,
+    color: "text-green-500",
+    bgColor: "bg-green-500/10",
+    borderColor: "border-green-500/20",
+    image: "/images/healthy-corn.jpg"
+  },
+  msv: {
+    title: "Maize Streak Virus",
+    description: "Your corn plant shows signs of Maize Streak Virus infection.",
+    icon: AlertTriangle,
+    color: "text-yellow-500",
+    bgColor: "bg-yellow-500/10",
+    borderColor: "border-yellow-500/20",
+    image: "/images/msv-corn.jpg"
+  },
+  mln: {
+    title: "Maize Lethal Necrosis",
+    description: "Your corn plant shows signs of Maize Lethal Necrosis disease.",
+    icon: XCircle,
+    color: "text-red-500",
+    bgColor: "bg-red-500/10",
+    borderColor: "border-red-500/20",
+    image: "/images/mln-corn.jpg"
+  }
+} as const
+
+export default function ResultDisplay({ result }: ResultDisplayProps) {
+  const router = useRouter()
+
+  const handleChat = () => {
+    const searchParams = new URLSearchParams({
+      message: result.message,
+      disease: result.status,
+      confidence: result.confidence
+    })
+    router.push(`/chat?${searchParams.toString()}`)
   }
 
   const config = statusConfig[result.status]
   const Icon = config.icon
 
   return (
-    <div className="space-y-6">
-      <div className={`flex items-center p-4 rounded-lg ${config.bgColor} ${config.borderColor} border`}>
-        <Icon className={`h-8 w-8 ${config.color} mr-3`} />
-        <div>
-          <h3 className={`font-bold text-lg ${config.color}`}>{config.title}</h3>
-          <p className="text-gray-700">{config.description}</p>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={`p-6 rounded-xl border ${config.borderColor} ${config.bgColor}`}
+    >
+      <div className="flex items-start gap-4">
+        <div className={`p-2 rounded-lg ${config.bgColor}`}>
+          <Icon className={`h-6 w-6 ${config.color}`} />
+        </div>
+        <div className="flex-1 space-y-2">
+          <h3 className={`text-lg font-semibold ${config.color}`}>
+            {config.title}
+          </h3>
+          <p className="text-gray-300">{config.description}</p>
+          <div className="pt-2">
+            <p className="text-sm text-gray-400">
+              Confidence: {result.confidence}%
+            </p>
+          </div>
+          <Button
+            onClick={handleChat}
+            className="mt-4 bg-blue-500 hover:bg-blue-600 text-white"
+          >
+            <Leaf className="h-4 w-4 mr-2" />
+            Get Treatment Advice
+          </Button>
         </div>
       </div>
-
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardContent className="p-4">
-            <div className="space-y-2">
-              <h4 className="font-medium text-sm text-gray-500">Confidence Score</h4>
-              <div className="flex items-center">
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div
-                    className={`h-2.5 rounded-full ${result.status === "healthy" ? "bg-green-500" : result.status === "msv" ? "bg-yellow-500" : "bg-red-500"}`}
-                    style={{ width: `${result.confidence * 100}%` }}
-                  ></div>
-                </div>
-                <span className="ml-2 text-sm font-medium">{Math.round(result.confidence * 100)}%</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="space-y-2">
-              <h4 className="font-medium text-sm text-gray-500">Detection Time</h4>
-              <p className="font-medium">{new Date(result.timestamp).toLocaleString()}</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="space-y-4">
-        <h3 className="text-lg font-medium">What This Means</h3>
-
-        {result.status === "healthy" && (
-          <div className="space-y-2">
-            <p>Your maize plant appears healthy. Continue with your current farming practices:</p>
-            <ul className="list-disc pl-5 space-y-1">
-              <li>Regular watering</li>
-              <li>Proper fertilization</li>
-              <li>Routine monitoring for pests and diseases</li>
-            </ul>
-          </div>
-        )}
-
-        {result.status === "msv" && (
-          <div className="space-y-2">
-            <p>Maize Streak Virus (MSV) is a serious disease transmitted by leafhoppers. Recommended actions:</p>
-            <ul className="list-disc pl-5 space-y-1">
-              <li>Remove and destroy infected plants</li>
-              <li>Control leafhopper populations with appropriate insecticides</li>
-              <li>Plant MSV-resistant varieties in future seasons</li>
-              <li>Maintain weed-free fields to reduce leafhopper habitat</li>
-            </ul>
-          </div>
-        )}
-
-        {result.status === "mln" && (
-          <div className="space-y-2">
-            <p>
-              Maize Lethal Necrosis (MLN) is a devastating disease caused by a combination of viruses. Urgent actions
-              required:
-            </p>
-            <ul className="list-disc pl-5 space-y-1">
-              <li>Immediately remove and destroy all infected plants</li>
-              <li>Implement strict field sanitation measures</li>
-              <li>Control insect vectors with appropriate insecticides</li>
-              <li>Consider crop rotation with non-cereal crops for at least two seasons</li>
-              <li>Consult with local agricultural extension officers for additional guidance</li>
-            </ul>
-          </div>
-        )}
-      </div>
-    </div>
+    </motion.div>
   )
 }
