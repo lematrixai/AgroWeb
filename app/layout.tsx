@@ -1,9 +1,10 @@
-
 import type React from "react"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { BackgroundBeams } from "@/components/ui/background-beams"
+import { AuthProvider } from "@/app/context/auth-context"
+import { Toaster } from "sonner"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -20,10 +21,13 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={inter.className}>
-        <BackgroundBeams />
-        <main className="relative z-10">
-          {children}
-        </main>
+        <AuthProvider>
+          <BackgroundBeams />
+          <main className="relative z-10">
+            {children}
+          </main>
+          <Toaster />
+        </AuthProvider>
       </body>
     </html>
   )

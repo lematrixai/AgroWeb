@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { detectDisease } from "@/lib/action/action.detect"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
+import { saveDetectionResult } from "@/lib/action/action.results"
 
 interface PredictionResult {
   error?: boolean;
@@ -66,14 +68,49 @@ export default function ImageUploader() {
     setError(null)
   }
 
+  const getLocation = async () => {
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject)
+      })
+      return {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude
+      }
+    } catch (error) {
+      console.warn('Error getting location:', error)
+      return undefined
+    }
+  }
+
   const handleUpload = async () => {
     try {
       if (!file) return
       setLoading(true)
       setError(null)
+
+      // Get location if available
+      const location = await getLocation()
+
+      // Get prediction
       const result = await detectDisease(file)
       console.log("Result:", result)
       setPrediction(result)
+
+      // Save result to Firebase
+      if (!result.error) {
+        const saveResult = await saveDetectionResult({
+          imageUrl: preview || '',
+          predictions: result.predictions,
+          topPrediction: result.topPrediction,
+          message: result.message,
+          location
+        })
+
+        if (!saveResult.success) {
+          console.error('Failed to save detection result')
+        }
+      }
     } catch (error) {
       console.error("Error uploading file:", error)
       let errorMessage = "Failed to analyze image. Please try again."
@@ -237,13 +274,21 @@ export default function ImageUploader() {
             <div className="space-y-2">
               <p className="text-white">{prediction.message}</p>
               {!prediction.error && (
-                <Button
-                  onClick={handleChat}
-                  className="mt-2 bg-blue-500 hover:bg-blue-600 text-white"
-                >
-                  <MessageSquare className="h-4 w-4 mr-2" />
-                  Chat with AI Assistant
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleChat}
+                    className="bg-blue-500 hover:bg-blue-600 text-white"
+                  >
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Chat with AI Assistant
+                  </Button>
+                  <Button
+                    onClick={() => router.push('/results')}
+                    className="bg-green-500 hover:bg-green-600 text-white"
+                  >
+                    View Results
+                  </Button>
+                </div>
               )}
             </div>
           </div>

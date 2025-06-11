@@ -2,7 +2,7 @@
 
 import { Suspense } from "react"
 import Link from "next/link"
-import { ArrowRight, Upload, Brain, Leaf, Sparkles, MessageSquare, ListChecks } from "lucide-react"
+import { ArrowRight, Upload, Brain, Leaf, Sparkles, MessageSquare, ListChecks, LogIn, LogOut, Shield, User } from "lucide-react"
 import { motion } from "framer-motion"
 import { BackgroundBeams } from "@/components/ui/background-beams"
 import { TypewriterEffect } from "@/components/ui/typewriter-effect"
@@ -12,6 +12,16 @@ import ImageUploader from "@/components/image-uploader"
 import LoadingSkeleton from "@/components/loading-skeleton"
 import { AnimatedGradientText } from "@/components/magicui/animated-gradient-text"
 import { TracingBeam } from "@/components/ui/tracing-beam"
+import { useAuth } from "@/app/context/auth-context"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
@@ -49,13 +59,81 @@ const words = [
 ]
 
 export default function Home() {
+  const { user, signOut } = useAuth()
+
+  const handleSignOut = async () => {
+    try {
+      await signOut()
+    } catch (error) {
+      console.error('Error signing out:', error)
+    }
+  }
+
+  const getInitials = (email: string) => {
+    return email.split('@')[0].slice(0, 2).toUpperCase()
+  }
+
   return (
     <div className="min-h-screen bg-black/[0.96] antialiased">
       <BackgroundBeams />
       <div className="container max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="flex items-center gap-3 mb-8">
-          <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-blue-500 animate-pulse" />
-          <TypewriterEffect words={words} className="text-2xl sm:text-3xl font-bold" />
+        <div className="flex justify-between items-center mb-8">
+          <div className="flex items-center gap-3">
+            <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-blue-500 animate-pulse" />
+            <TypewriterEffect words={words} className="text-2xl sm:text-3xl font-bold" />
+          </div>
+          <div className="flex items-center gap-4">
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={user.photoURL || ''} alt={user.email || ''} />
+                      <AvatarFallback className="bg-blue-500 text-white">
+                        {user.email ? getInitials(user.email) : <User className="h-4 w-4" />}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56 bg-black/90 border border-gray-800" align="end">
+                  <DropdownMenuLabel className="text-gray-400">
+                    {user.email}
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-gray-800" />
+                  {/* @ts-ignore - user.role exists but TypeScript doesn't know about it */}
+                  {user.role === 'administrator' && (
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin" className="cursor-pointer text-gray-300 hover:text-white hover:bg-gray-800">
+                        <Shield className="h-4 w-4 mr-2" />
+                        Admin Dashboard
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin" className="cursor-pointer text-gray-300 hover:text-white hover:bg-gray-800">
+                      <User className="h-4 w-4 mr-2" />
+                      Dashboard
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-gray-800" />
+                  <DropdownMenuItem 
+                    onClick={handleSignOut}
+                    className="cursor-pointer text-red-400 hover:text-red-300 hover:bg-gray-800"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link href="/login">
+                <Button className="bg-blue-500 hover:bg-blue-600 text-white">
+                  <LogIn className="h-4 w-4 mr-2" />
+                  Login
+                </Button>
+              </Link>
+            )}
+          </div>
         </div>
 
         {/* Main Content Section */}

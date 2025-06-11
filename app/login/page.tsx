@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { ArrowLeft, Sparkles, LogIn, Mail, Lock, AlertCircle } from "lucide-react"
+import { ArrowLeft, Sparkles, LogIn, Mail, Lock, AlertCircle, Loader2 } from "lucide-react"
 import { BackgroundBeams } from "@/components/ui/background-beams"
 import { Card } from "@/components/ui/card"
 import { TypewriterEffect } from "@/components/ui/typewriter-effect"
@@ -12,6 +12,9 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import { useAuth } from "@/app/context/auth-context"
+import { useRouter } from "next/navigation"
+
 const words = [
   {
     text: "Admin",
@@ -29,10 +32,23 @@ export default function LoginPage() {
     password: "",
   })
   const [showContactDialog, setShowContactDialog] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const { signIn } = useAuth()
+  const router = useRouter()
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: Implement login logic
+    setLoading(true)
+
+    try {
+      await signIn(formData.email, formData.password)
+      // Note: The redirect is handled in the signIn function
+    } catch (error) {
+      // Error is already handled by the auth context
+      console.error('Login error:', error)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -75,6 +91,7 @@ export default function LoginPage() {
                       className="pl-10 bg-black/50 border-gray-800 text-white"
                       placeholder="Enter your email"
                       required
+                      disabled={loading}
                     />
                   </div>
                 </div>
@@ -93,6 +110,7 @@ export default function LoginPage() {
                       className="pl-10 bg-black/50 border-gray-800 text-white"
                       placeholder="Enter your password"
                       required
+                      disabled={loading}
                     />
                   </div>
                 </div>
@@ -103,9 +121,22 @@ export default function LoginPage() {
                   </Link>
                 </div>
 
-                <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white">
-                  <LogIn className="h-4 w-4 mr-2" />
-                  Sign In
+                <Button 
+                  type="submit" 
+                  className="w-full bg-blue-500 hover:bg-blue-600 text-white"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Signing In...
+                    </>
+                  ) : (
+                    <>
+                      <LogIn className="h-4 w-4 mr-2" />
+                      Sign In
+                    </>
+                  )}
                 </Button>
 
                 <div className="text-center text-sm text-gray-400">
